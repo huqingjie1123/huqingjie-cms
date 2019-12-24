@@ -1,7 +1,10 @@
 package com.huqingjie.cms.controller;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.github.pagehelper.PageInfo;
 import com.huqingjie.cms.domain.Article;
@@ -21,12 +25,15 @@ import com.huqingjie.cms.domain.ArticleWithBLOBs;
 import com.huqingjie.cms.domain.Category;
 import com.huqingjie.cms.domain.Channel;
 import com.huqingjie.cms.domain.Comment;
+import com.huqingjie.cms.domain.Complain;
 import com.huqingjie.cms.domain.Slide;
 import com.huqingjie.cms.domain.User;
 import com.huqingjie.cms.service.ArticleService;
 import com.huqingjie.cms.service.ChannelService;
 import com.huqingjie.cms.service.CommentService;
+import com.huqingjie.cms.service.ComplainService;
 import com.huqingjie.cms.service.SlideService;
+import com.huqingjie.cms.util.CMSException;
 
 @Controller
 public class IndexController {
@@ -39,6 +46,8 @@ public class IndexController {
 	private SlideService slideService;
 	@Resource
 	private CommentService commentService;
+	@Resource
+	private ComplainService complainService;
 
 	@RequestMapping(value = { "", "/", "index" })
 	public String index(Model model, Article article, @RequestParam(defaultValue = "1") Integer pageNum) {
@@ -82,6 +91,7 @@ public class IndexController {
 		// 页面右侧显示最近发布的5篇文章
 		Article last = new Article();
 		last.setStatus(1);
+		last.setDeleted(0);
 		PageInfo<Article> lastInfo = articleService.selects(last, 1);
 		model.addAttribute("lastInfo", lastInfo);
 
@@ -105,19 +115,61 @@ public class IndexController {
 
 	@ResponseBody
 	@PostMapping("addComment")
-	public boolean addComment(Comment comment,HttpServletRequest request) {
+	public boolean addComment(Comment comment, HttpServletRequest request) {
 		HttpSession session = request.getSession();
-		//获取session中的用户对象
+		// 获取session中的用户对象
 		User user = (User) session.getAttribute("user");
-		if(null==user)
-		 return false;//没有登录，不能评论
+		if (null == user)
+			return false;// 没有登录，不能评论
 		comment.setUserId(user.getId());
 		comment.setCreated(new Date());
-		return commentService.insert(comment)>0;
-		
+		return commentService.insert(comment) > 0;
+
 	}
 
-	
-	 
+	// 去举报
+	@GetMapping("complain")
+	public String complain(Model model, Article art, HttpSession session) {
+		User user = (User) session.getAttribute("user");
+		if (null != user) {// 如果有户登录
+			art.setUser(user);// 封装举报人和举报的文章
+			model.addAttribute("art", art);
+			return "index/complain";// 转发到举报页面
+		}
+
+		return "redirect:/passport/login";// 没有登录，先去登录
+
+	}
+
+	// 执行举报
+	@ResponseBody
+	@PostMapping("complain")
+	public boolean complain(Model model, MultipartFile file, Complain complain) {
+		if (null != file && !file.isEmpty()) {
+			String path = "d:/pic/";
+			String filename = file.getOriginalFilename();
+			String newFileName = UUID.randomUUID() + filename.substring(filename.lastIndexOf("."));
+			File f = new File(path, newFileName);
+			try {
+				file.transferTo(f);
+				complain.setPicurl(newFileName);
+			} catch (IllegalStateException | IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		try {
+			// 执行举报
+			complainService.insert(complain);
+			return true;
+		} catch (CMSException e) {
+			e.printStackTrace();
+			model.addAttribute("error", e.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			model.addAttribute("error", "系统错误，联系管理员");
+		}
+		return false;
+	}
 
 }

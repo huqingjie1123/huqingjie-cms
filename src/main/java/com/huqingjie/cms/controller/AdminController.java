@@ -14,9 +14,12 @@ import com.github.pagehelper.PageInfo;
 import com.huqingjie.cms.dao.ArticleMapper;
 import com.huqingjie.cms.domain.Article;
 import com.huqingjie.cms.domain.ArticleWithBLOBs;
+import com.huqingjie.cms.domain.Complain;
 import com.huqingjie.cms.domain.User;
 import com.huqingjie.cms.service.ArticleService;
+import com.huqingjie.cms.service.ComplainService;
 import com.huqingjie.cms.service.UserService;
+import com.huqingjie.cms.vo.ComplainVO;
 
 @RequestMapping("admin")
 @Controller
@@ -26,6 +29,9 @@ public class AdminController {
 	private UserService userService;
 	@Resource
 	private ArticleService articleService;
+	@Resource
+	private ComplainService comService;
+	
 	/**
 	 * 
 	 * @Title: index 
@@ -105,6 +111,26 @@ public class AdminController {
 	public Boolean update(ArticleWithBLOBs article) {
 		return articleService.updateByPrimaryKeySelective(article)>0;
 	}
+	/**
+	 * 查询投诉
+	 * @Title: complain 
+	 * @Description: TODO
+	 * @param m
+	 * @param vo
+	 * @param pageNum
+	 * @return
+	 * @return: String
+	 */
+	@GetMapping("article/complains")
+	public String complain(Model m,ComplainVO vo,@RequestParam(defaultValue = "1")int pageNum) {
+		PageInfo<Complain> info = comService.selects(vo, pageNum);
+		m.addAttribute("info", info);
+		m.addAttribute("vo", vo);
+		
+		return "admin/article/complains";
+	}
+	
+	
 	
 	
 }

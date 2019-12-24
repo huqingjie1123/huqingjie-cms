@@ -29,4 +29,13 @@ public interface ArticleMapper {
     int updateByPrimaryKeyWithBLOBs(ArticleWithBLOBs record);
 
     int updateByPrimaryKey(Article record);
+    /**
+     * 更新举报数量
+     * @Title: updateComplainnum 
+     * @Description: TODO
+     * @param articleId
+     * @return
+     * @return: int
+     */
+    int updateComplainnum(Integer articleId);
 }

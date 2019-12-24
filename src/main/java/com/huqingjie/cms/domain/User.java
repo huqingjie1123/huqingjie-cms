@@ -35,8 +35,22 @@ public class User implements Serializable{
     private String role;
 
     private String url;
+    
+    private String isRemember;//记住用户
+    
+    public String getIsRemember() {
+		return isRemember;
+	}
 
-    public String getRepassword() {
+	public void setIsRemember(String isRemember) {
+		this.isRemember = isRemember;
+	}
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	public String getRepassword() {
 		return repassword;
 	}
 

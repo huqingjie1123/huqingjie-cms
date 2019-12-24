@@ -25,7 +25,8 @@
 			jdbcType="VARCHAR" />
 		<result column="original" property="original"
 			jdbcType="VARCHAR" />
-
+ 		 <result column="complainnum" property="complainNum" jdbcType="INTEGER" />   
+   
 		<!-- 封装单个对象. user -->
 		<association property="user"
 			select="com.huqingjie.cms.dao.UserMapper.selectByPrimaryKey"
@@ -51,12 +52,17 @@
 		id, title, picture, channel_id, category_id, user_id, hits,
 		hot, status,
 		deleted,
-		created, updated, content_type, keywords, original
+		created, updated, content_type, keywords, original,complainnum
 	</sql>
 	<sql id="Blob_Column_List">
 		content, summary
 	</sql>
-
+	
+	<!-- 举报次数加1 -->
+  	<update id="updateComplainnum">
+ 	 	update cms_article set complainnum=complainnum+1 where id=#{id}
+ 	</update>
+	
 	<select id="selects" resultMap="BaseResultMap">
 
 		select

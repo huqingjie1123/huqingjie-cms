@@ -16,6 +16,7 @@
 <body>
 	<div class="container">
 	  <h1 align="center">${art.title }</h1>
+	  <span style="float:right"><a href="/complain?id=${art.id }">举报</a></span>
 	  <h3>${art.user.username} <fmt:formatDate value="${art.created }" pattern="yyyy-MM-dd HH:mm:ss"/></h3>
 	  <div align="center"> ${art.content }</div> 
 	  

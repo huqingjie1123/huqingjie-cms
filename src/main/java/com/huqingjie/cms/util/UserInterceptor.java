@@ -1,10 +1,18 @@
 package com.huqingjie.cms.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
+import javax.annotation.Resource;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+
+import com.huqingjie.cms.dao.UserMapper;
+import com.huqingjie.cms.domain.User;
 /**
  * 
  * @ClassName: UserInterceptor 
@@ -26,7 +34,9 @@ public class UserInterceptor extends HandlerInterceptorAdapter {
 		   if(null!=object)//如果不为空,则返回true
 			  return true;//放行
 	   }
-	   
+	   // 如果用户存cookie了,并和数据库的账户密码匹配则不拦截
+	   if(rememberAutoLogin(request,request.getSession()))
+			return true;
 	   //不符合要求,转发到登录页面
 	   request.setAttribute("error", "权限不符合,请重新登录");
 	   request.getRequestDispatcher("/WEB-INF/view/passport/login.jsp").forward(request, response);	
@@ -34,4 +44,31 @@ public class UserInterceptor extends HandlerInterceptorAdapter {
 	   return false;
 		
 	}	
+	
+	@Resource
+	private UserMapper userMapper;
+	
+	private boolean rememberAutoLogin(HttpServletRequest request,HttpSession session) throws UnsupportedEncodingException {
+		//从cookie获取账户密码
+		Cookie cokUsername = CookieUtil.getCookieByName(request, "username");
+		Cookie cokPassword = CookieUtil.getCookieByName(request, "password");
+		// 从cookie获取用户名和密码
+		if (null != cokUsername && null != cokPassword && null != cokUsername.getValue()
+				&& null != cokPassword.getValue()) {
+			String username =URLDecoder.decode(cokUsername.getValue(),"UTF-8");
+			String password = URLDecoder.decode(cokPassword.getValue(),"UTF-8");
+			// 从数据库获取用户名和密码并和cookie的比较。若一直则返回true
+			User user = userMapper.selectByName(username);
+			if (null != user && username.equals(user.getUsername()) && password.equals(user.getPassword())) {
+				///系统里面用到了session ,需要重新存储session
+				session.setAttribute("user", user);
+				
+				return true;
+			}
+		}
+		return false;
+
+	}
+	
+	
 }
