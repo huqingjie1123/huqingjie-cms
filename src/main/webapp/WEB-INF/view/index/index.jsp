@@ -2,6 +2,7 @@
 	pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
 <!DOCTYPE html>
 <html>
@@ -10,8 +11,8 @@
 <title>CMS首页</title>
 <!-- 引入样式 -->
 <link href="/resource/css/index.css" rel="stylesheet">
-<script type="text/javascript" src="/resource/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="/resource/js/jquery-3.2.1.js"></script>
+<script type="text/javascript" src="/resource/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="/resource/css/bootstrap.css">
 <style type="text/css">
 .subchannel {
@@ -80,7 +81,7 @@ li {
 		<div class="row">
 			<!-- 左侧栏目 -->
 			<div class="col-md-2" style="height: 550px">
-				<img alt="" src="/resource/images/logo-index.jpg">
+				<img alt="" src="/resource/images/logo-index.png">
 				<ul class="list-group">
 					<li class="channel-item ${article.channelId==null?"active":"" }" ><a
 						href="/">推荐</a></li>
@@ -94,10 +95,22 @@ li {
 				</ul>
 			</div>
 			<div class="col-md-7">
-				<!--轮播图-->
-				<c:if test="${null==article.channelId }">
-					<div>
 
+				<form action="/index/article/search" method="get">
+					<div class="input-group mb-3">
+						<input type="text" name="key" value="${key }" class="form-control"
+							placeholder="内容"
+							aria-label="Recipient's username" aria-describedby="button-addon2">
+						<div class="input-group-append">
+							<button class="btn btn-outline-secondary"
+								id="button-addon2">搜</button>
+						</div>
+					</div>
+				</form>
+
+				<!-- 轮播图 -->
+				<c:if test="${null == article.channelId}">
+					<div>
 						<div id="carouselExampleCaptions" class="carousel slide"
 							data-ride="carousel">
 							<ol class="carousel-indicators">
@@ -107,18 +120,15 @@ li {
 								<li data-target="#carouselExampleCaptions" data-slide-to="2"></li>
 							</ol>
 							<div class="carousel-inner">
-
 								<c:forEach items="${slides}" var="s" varStatus="i">
-									<div class="carousel-item ${i.index==0?"active":"" }" >
-										<img src="/pic/${s.url }" class="d-block w-100" alt="...">
+									<div class="carousel-item ${i.index==0?"active":""}">
+										<img src="/pic/${s.url}" class="d-block w-100" alt="...">
 										<div class="carousel-caption d-none d-md-block">
-											<h5>${s.title }</h5>
+											<h5>${s.title}</h5>
 										</div>
 									</div>
 								</c:forEach>
-
 							</div>
-
 							<a class="carousel-control-prev" href="#carouselExampleCaptions"
 								role="button" data-slide="prev"> <span
 								class="carousel-control-prev-icon" aria-hidden="true"></span> <span
@@ -202,9 +212,10 @@ li {
 		function goPage(page) {
 			var channelId = '${article.channelId}';
 			var categoryId = '${article.categoryId}';
-
+			var key = "${key }"
+			
 			location.href = "?channelId=" + channelId + "&categoryId="
-					+ categoryId + "&pageNum=" + page;
+					+ categoryId + "&pageNum=" + page+ "&key=" + key;
 
 		}
 	</script>

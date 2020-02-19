@@ -9,15 +9,20 @@
 		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
 
-
-
+	<!-- 加载kafka -->
+	<import resource="classpath:consumer.xml"/>
+	<import resource="classpath:producer.xml"/>
+	<!-- 加载es -->
+	<import resource="classpath:es.xml"/>
+	<!-- 加载redis -->
+	<import resource="classpath:redis.xml"/>
+	
 	<!-- 1、注解扫描器 -->
 	<context:component-scan base-package="com.huqingjie" >
 		<!-- 排除要要扫描的controller -->
 		<context:exclude-filter type="annotation"
 			expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
-	
 	
 	<!--2、 指定外部属性文件的位置 -->
 	<context:property-placeholder

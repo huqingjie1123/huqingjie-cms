@@ -63,7 +63,53 @@
  	 	update cms_article set complainnum=complainnum+1 where id=#{id}
  	</update>
 	
+	<!-- 点击次数加一 -->
+	<update id="insertByCom">
+ 	 	update cms_article set original=original+1 where id=#{id}
+ 	</update>
+	
 	<select id="selects" resultMap="BaseResultMap">
+
+		select
+		<include refid="Base_Column_List" />
+		from cms_article
+		<where>
+			<!-- 按照标题查询 -->
+			<if test="title!=null and title!=''">
+				title like "%" #{title} "%"
+			</if>
+
+			<!-- 文章状态 -->
+			<if test="status!=null and status!=99">
+				and status =#{status}
+			</if>
+
+			<if test="channelId!=null">
+				and channel_Id =#{channelId}
+			</if>
+
+			<if test="categoryId!=null">
+				and category_id =#{categoryId}
+			</if>
+
+			<if test="hot!=null">
+				and hot =#{hot}
+			</if>
+
+			<if test="userId!=null">
+				and user_id =#{userId}
+			</if>
+			
+			<if test="deleted!=null">
+				and deleted =#{deleted}
+			</if>
+		</where>
+		
+		<!-- 按照文章的修改时间.倒序 -->
+		order by updated desc
+
+	</select>
+	<select id="selectByArticle" resultMap="BaseResultMap">
 
 		select
 		<include refid="Base_Column_List" />

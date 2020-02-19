@@ -26,6 +26,15 @@ public class Complain {
 
 	private Article article;
 	private User user;
+	
+	
+	public String getComplain_num() {
+		return complain_num;
+	}
+
+	public void setComplain_num(String complain_num) {
+		this.complain_num = complain_num;
+	}
 
 	public String getUrl() {
 		return url;

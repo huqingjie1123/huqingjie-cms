@@ -16,6 +16,10 @@
   	select <include refid="Base_Column_List" /> from cms_channel
   </select>
   
+  <select id="selectByIdCount" resultType="int">
+  	select b.id from cms_channel b 
+  </select>
+  
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
     select 
     <include refid="Base_Column_List" />

@@ -10,6 +10,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,15 +21,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageInfo;
 import com.huqingjie.cms.domain.Article;
 import com.huqingjie.cms.domain.ArticleWithBLOBs;
 import com.huqingjie.cms.domain.Category;
 import com.huqingjie.cms.domain.Channel;
+import com.huqingjie.cms.domain.Collect;
 import com.huqingjie.cms.domain.Comment;
 import com.huqingjie.cms.domain.User;
 import com.huqingjie.cms.service.ArticleService;
 import com.huqingjie.cms.service.ChannelService;
+import com.huqingjie.cms.service.CollectService;
 import com.huqingjie.cms.service.CommentService;
 
 @RequestMapping("my")
@@ -37,7 +42,11 @@ public class MyController {
 	@Resource
 	private ChannelService channelService;
 	@Resource
+	private CollectService collectService;
+	@Resource
 	private ArticleService articleService;
+	@Autowired
+	private KafkaTemplate<Article, String> kafkaTemplate;
 	@Resource
 	private CommentService commentService;
 	
@@ -127,6 +136,8 @@ public class MyController {
 			article.setPicture(newFileName);
 		}
 		//初始化操作
+		article.setChannelId(article.getChannelId());
+		article.setCategoryId(article.getCategoryId());
 		article.setCreated(new Date());//发布时间默认系统时间
 		article.setStatus(0);//文章状态 0:待审核
 		article.setHits(0);//点击量
@@ -137,6 +148,10 @@ public class MyController {
 		User u = (User) session.getAttribute("user");
 		article.setUserId(u.getId());//发布人
 		article.setHot(0);//非热文章
+
+		String str = JSON.toJSONString(article);
+		String string = "add="+str;
+		kafkaTemplate.send("article", string);
 		
 		return articleService.insertSelective(article)>0;
 	}
@@ -189,7 +204,38 @@ public class MyController {
 	@ResponseBody
 	@PostMapping("article/update")
 	public boolean update(ArticleWithBLOBs art) {
+		
+		String str = JSON.toJSONString(art);
+		String string = "del="+str;
+		kafkaTemplate.send("article", string);
+		
 		return articleService.updateByPrimaryKeySelective(art)>0;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	@GetMapping("article/collect")
+	public String selectCollect(Model m,@RequestParam(defaultValue = "1")int pageNum) {
+		
+		PageInfo info = collectService.selectCollect(pageNum);
+		m.addAttribute("info", info);
+		
+		return "my/article/collect";
+	}
+	/**
+	 * 删除
+	 * @Title: delCollect 
+	 * @Description: TODO
+	 * @param id
+	 * @return
+	 * @return: int
+	 */
+	@ResponseBody
+	@RequestMapping("collect/del")
+	public int delCollect(Integer id) {
+		
+		int i = collectService.del(id);
+		
+		return i;
 	}
 	
 }

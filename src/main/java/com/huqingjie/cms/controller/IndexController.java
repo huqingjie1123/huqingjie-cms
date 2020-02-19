@@ -10,6 +10,10 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,20 +24,24 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.github.pagehelper.PageInfo;
+import com.huqingjie.cms.dao.ArticleRes;
 import com.huqingjie.cms.domain.Article;
 import com.huqingjie.cms.domain.ArticleWithBLOBs;
 import com.huqingjie.cms.domain.Category;
 import com.huqingjie.cms.domain.Channel;
+import com.huqingjie.cms.domain.Collect;
 import com.huqingjie.cms.domain.Comment;
 import com.huqingjie.cms.domain.Complain;
 import com.huqingjie.cms.domain.Slide;
 import com.huqingjie.cms.domain.User;
 import com.huqingjie.cms.service.ArticleService;
 import com.huqingjie.cms.service.ChannelService;
+import com.huqingjie.cms.service.CollectService;
 import com.huqingjie.cms.service.CommentService;
 import com.huqingjie.cms.service.ComplainService;
 import com.huqingjie.cms.service.SlideService;
 import com.huqingjie.cms.util.CMSException;
+import com.huqingjie.cms.util.HLUtils;
 
 @Controller
 public class IndexController {
@@ -41,14 +49,54 @@ public class IndexController {
 	@Resource
 	private ChannelService channelService;
 	@Resource
+	private CollectService collectService;
+	@Resource
 	private ArticleService articleService;
 	@Resource
 	private SlideService slideService;
+	@Autowired
+	KafkaTemplate<String, String> kafkaTemplate;
 	@Resource
 	private CommentService commentService;
 	@Resource
 	private ComplainService complainService;
-
+	@SuppressWarnings("rawtypes")
+	@Autowired
+	RedisTemplate redisTemplate;
+	@Autowired
+	ArticleRes articleRes;
+	@Autowired
+	ElasticsearchTemplate elasticsearchTemplate;
+	
+	
+	@RequestMapping(value = {"index/article/search"})
+	public String search(Model m,String key) {
+		// 1. 查询出所有的栏目
+		List<Channel> channels = channelService.selects();
+		m.addAttribute("channels", channels);
+		// 无高亮
+//		List<Article> list = articleRes.findByTitle(key);
+//		PageInfo<Article> info = new PageInfo<>(list);
+//		m.addAttribute("info", info);
+		// 高亮搜索
+		PageInfo<?> info = HLUtils.findByHighLight(elasticsearchTemplate, Article.class, 1, 5, new String[] {"title"}, "id", key);
+		m.addAttribute("info", info);
+		m.addAttribute("key", key);
+// 		PageInfo<Article> info = new PageInfo<Article>(infos.getList());
+		
+		
+		// 页面右侧显示最近发布的5篇文章
+		Article last = new Article();
+		last.setStatus(1);
+		last.setDeleted(0);
+		PageInfo<Article> lastInfo = articleService.selects(last, 1);
+		m.addAttribute("lastInfo", lastInfo);
+				
+		return "index/index";
+			
+	}
+	
+	@SuppressWarnings({ "unused", "unchecked" })
 	@RequestMapping(value = { "", "/", "index" })
 	public String index(Model model, Article article, @RequestParam(defaultValue = "1") Integer pageNum) {
 		// 0.封装查询条件
@@ -69,8 +117,16 @@ public class IndexController {
 			a2.setHot(1);// 1 推荐文章的标志
 			a2.setStatus(1); // 2审核过的文章
 			// 2.查询推荐下的所有的文章
-			PageInfo<Article> info = articleService.selects(a2, pageNum);
-			model.addAttribute("info", info);
+			List<Article> redisArticle = redisTemplate.opsForList().range("new_article", 0, -1);
+			
+			if(redisArticle==null || redisArticle.size()==0 ) {
+				PageInfo<Article> lastInfo = articleService.selects(a2, pageNum);
+				redisTemplate.opsForList().leftPushAll("new_article", lastInfo.getList().toArray());
+				model.addAttribute("info", lastInfo);
+			}else {
+				PageInfo<Article> pageInfo = new PageInfo<>(redisArticle);
+				model.addAttribute("info", pageInfo);
+			}
 		}
 
 		// 如果栏目不为空.则查询栏目下所有分类
@@ -92,9 +148,19 @@ public class IndexController {
 		Article last = new Article();
 		last.setStatus(1);
 		last.setDeleted(0);
-		PageInfo<Article> lastInfo = articleService.selects(last, 1);
-		model.addAttribute("lastInfo", lastInfo);
-
+		// 优化最新文章
+		@SuppressWarnings("unchecked")
+		List<Article> redisArticle = redisTemplate.opsForList().range("new_article", 0, -1);
+		
+		if(redisArticle==null || redisArticle.size()==0 ) {
+			PageInfo<Article> lastInfo = articleService.selects(last, pageNum);
+			redisTemplate.opsForList().leftPushAll("new_article", lastInfo.getList().toArray());
+			model.addAttribute("lastInfo", lastInfo);
+		}else {
+			PageInfo<Article> pageInfo = new PageInfo<>(redisArticle);
+			model.addAttribute("lastInfo", pageInfo);
+		}
+		
 		return "index/index";
 
 	}
@@ -102,14 +168,20 @@ public class IndexController {
 	// 查询单个文章
 	@GetMapping("article")
 	public String article(Integer id, Model model) {
+		Article article = new Article();
+		article.setId(id);
 		ArticleWithBLOBs art = articleService.selectByPrimaryKey(id);
+		
+		
+		
+		articleService.insertByCom(id);
 		model.addAttribute("art", art);
 
 		Comment comment = new Comment();
 		comment.setArticleId(art.getId());
 		PageInfo<Comment> info = commentService.selects(comment, 1);
 		model.addAttribute("info", info);
-
+		
 		return "/index/article";
 	}
 
@@ -140,7 +212,35 @@ public class IndexController {
 		return "redirect:/passport/login";// 没有登录，先去登录
 
 	}
+	// 收藏
+	@GetMapping("collect")
+	public String collect(Model m,Article art,HttpSession session) {
+		User user = (User) session.getAttribute("user");
+		if (null != user) {// 如果有户登录
+			art.setUser(user);
+			m.addAttribute("art", art);
+			return "index/collect";// 转发到页面
+		}
 
+		return "redirect:/passport/login";// 没有登录，先去登录
+		
+	}
+	// 收藏
+	@ResponseBody
+	@PostMapping("go/collect")
+	public boolean collect(Model m,MultipartFile file,Collect co) {
+		
+		try {
+			collectService.insert(co);
+			return true;
+		} catch (CMSException e) {
+			e.printStackTrace();
+			m.addAttribute("error", e.getMessage());
+		}
+		
+		return false;
+	}
+	
 	// 执行举报
 	@ResponseBody
 	@PostMapping("complain")
@@ -171,5 +271,8 @@ public class IndexController {
 		}
 		return false;
 	}
+	
+	
+	
 
 }

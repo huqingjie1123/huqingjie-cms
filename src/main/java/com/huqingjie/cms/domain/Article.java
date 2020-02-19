@@ -3,6 +3,11 @@ package com.huqingjie.cms.domain;
 import java.io.Serializable;
 import java.util.Date;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+@Document(indexName = "cms_article",type = "article")
 public class Article implements Serializable{
     /**
 	 * @fieldName: serialVersionUID
@@ -10,9 +15,9 @@ public class Article implements Serializable{
 	 * @Description: TODO
 	 */
 	private static final long serialVersionUID = 1L;
-
+	@Id
 	private Integer id;
-
+	@Field(index = true,analyzer = "ik_smart",store=true,searchAnalyzer = "ik_smart",type = FieldType.text)
     private String title;
 
     private String picture;
@@ -23,13 +28,10 @@ public class Article implements Serializable{
 
     private Integer userId;
 
-    @SuppressWarnings("unused")
 	private User user;//发布人
     
-    @SuppressWarnings("unused")
 	private Channel channel;//栏目
     
-    @SuppressWarnings("unused")
 	private Category category;//分类
     
     private Integer hits;

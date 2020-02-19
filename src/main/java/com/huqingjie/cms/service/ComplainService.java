@@ -1,7 +1,5 @@
 package com.huqingjie.cms.service;
 
-import java.util.List;
-
 import com.github.pagehelper.PageInfo;
 import com.huqingjie.cms.domain.Complain;
 import com.huqingjie.cms.vo.ComplainVO;

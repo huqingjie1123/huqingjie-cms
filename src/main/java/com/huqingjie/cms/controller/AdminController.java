@@ -2,6 +2,8 @@ package com.huqingjie.cms.controller;
 
 import javax.annotation.Resource;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.github.pagehelper.PageInfo;
-import com.huqingjie.cms.dao.ArticleMapper;
 import com.huqingjie.cms.domain.Article;
 import com.huqingjie.cms.domain.ArticleWithBLOBs;
 import com.huqingjie.cms.domain.Complain;

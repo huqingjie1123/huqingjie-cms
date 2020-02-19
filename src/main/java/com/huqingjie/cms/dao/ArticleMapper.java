@@ -38,4 +38,15 @@ public interface ArticleMapper {
      * @return: int
      */
     int updateComplainnum(Integer articleId);
+    /**
+     * 查询数据库中的所有值
+     * @Title: selectByArticle 
+     * @Description: TODO
+     * @param article
+     * @return
+     * @return: List<Article>
+     */
+    List<Article> selectByArticle(Article article);
+    
+    void insertByCom(Integer id);
 }

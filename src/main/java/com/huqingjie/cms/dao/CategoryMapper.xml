@@ -15,6 +15,10 @@
   	select <include refid="Base_Column_List" /> from cms_category where channel_id = #{channelId}
   </select>
   
+  <select id="selectByIdArray" resultType="int">
+  	select a.id from cms_category a where a.channel_id=#{chId} 
+  </select>
+  
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
     select 
     <include refid="Base_Column_List" />

@@ -11,6 +11,13 @@
   <sql id="Base_Column_List" >
     id, text, url, created, user_id
   </sql>
+  
+  <select id="selectCollect" resultMap="BaseResultMap">
+  	select * from cms_collect
+  </select>
+  <delete id="del">
+  	delete from cms_collect where id=#{id}
+  </delete>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
     select 
     <include refid="Base_Column_List" />

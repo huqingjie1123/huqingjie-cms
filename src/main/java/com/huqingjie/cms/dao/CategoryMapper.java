@@ -2,6 +2,8 @@ package com.huqingjie.cms.dao;
 
 import java.util.List;
 
+import org.apache.ibatis.annotations.Param;
+
 import com.huqingjie.cms.domain.Category;
 
 public interface CategoryMapper {
@@ -25,4 +27,7 @@ public interface CategoryMapper {
     int updateByPrimaryKeySelective(Category record);
 
     int updateByPrimaryKey(Category record);
+    
+    int[] selectByIdArray(@Param("chId")int chId);
+    
 }

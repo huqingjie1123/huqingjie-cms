@@ -44,5 +44,19 @@ public class ArticleServiceImpl implements ArticleService {
 	public ArticleWithBLOBs selectByPrimaryKey(Integer id) {
 		return articleMapper.selectByPrimaryKey(id);
 	}
+
+	@Override
+	public List<Article> selectByArticle(Article article) {
+		return articleMapper.selectByArticle(article);
+	}
+
+	@Override
+	public void insertByCom(Integer id) {
+		try {
+			articleMapper.insertByCom(id);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
 }

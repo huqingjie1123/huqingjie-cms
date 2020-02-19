@@ -1,5 +1,7 @@
 package com.huqingjie.cms.service;
 
+import java.util.List;
+
 import com.github.pagehelper.PageInfo;
 import com.huqingjie.cms.domain.Article;
 import com.huqingjie.cms.domain.ArticleWithBLOBs;
@@ -42,7 +44,22 @@ public interface ArticleService {
      * @return: ArticleWithBLOBs
      */
     ArticleWithBLOBs selectByPrimaryKey(Integer id);
-
-    
+    /**
+     * 查询数据库所有值
+     * @Title: selectByArticle 
+     * @Description: TODO
+     * @param article
+     * @return
+     * @return: List<Article>
+     */
+    List<Article> selectByArticle(Article article);
+    /**
+     * 点击次数加一
+     * @Title: insertByCom 
+     * @Description: TODO
+     * @param id
+     * @return: void
+     */
+    void insertByCom(Integer id);
     
 }
